@@ -1,43 +1,105 @@
-.container {
-    max-width: 800px;
-    margin: 0 auto;
+/* Estilos gerais */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    color: #333;
+  }
+  
+  /* Container principal */
+  .container {
     padding: 20px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
+  /* Estilização dos campos de formulário */
   .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
   
-  .form-control {
+  label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
     font-size: 16px;
-    margin-top: 5px;
+    transition: all 0.3s ease;
   }
   
+  input:focus {
+    border-color: #ff6b00;
+    outline: none;
+  }
+  
+  /* Botão de calcular rota */
   .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    padding: 10px 20px;
-    font-size: 16px;
+    background-color: #ff6b00;
+    color: #fff;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 18px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
   }
   
   .btn-primary:hover {
-    background-color: #0056b3;
-    border-color: #004085;
+    background-color: #e65b00;
   }
   
+  /* Mapa */
   .map-container {
-    width: 100%;
-    height: 500px;
+    margin: 20px 0;
+    height: 300px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* Tempo estimado de chegada */
+  .eta {
+    text-align: center;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
   }
   
-  .eta {
-    margin-top: 20px;
-    text-align: center;
-    font-size: 18px;
-    color: #333;
+  .eta h3 {
+    font-size: 20px;
+    color: #ff6b00;
+  }
+  
+  /* Estilo Responsivo */
+  @media (max-width: 768px) {
+    .container {
+      padding: 15px;
+    }
+  
+    .btn-primary {
+      font-size: 16px;
+      padding: 12px;
+    }
+  
+    input {
+      font-size: 14px;
+      padding: 10px;
+    }
+  
+    .eta h3 {
+      font-size: 18px;
+    }
   }
   

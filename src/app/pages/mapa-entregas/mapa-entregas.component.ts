@@ -1,11 +1,12 @@
 /// <reference types="@types/google.maps" />
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-mapa-entregas',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './mapa-entregas.component.html',
   styleUrls: ['./mapa-entregas.component.css']
 })
@@ -13,6 +14,8 @@ export class MapaEntregasComponent implements OnInit {
 
   originAddress: string = '';  
   destinationAddress: string = ''; 
+  mapVisible: boolean = false;
+  
 
   private map!: google.maps.Map;
   private directionsService!: google.maps.DirectionsService;
@@ -34,42 +37,21 @@ export class MapaEntregasComponent implements OnInit {
       const mapStyles = [
         {
           "featureType": "administrative",
-          "elementType": "geometry",
-          "stylers": [
-            { "visibility": "off" }
-          ]
-        },
-        {
-          "featureType": "administrative",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            { "visibility": "off" }
-          ]
-        },
-        {
-          "featureType": "administrative",
-          "elementType": "labels.text.stroke",
+          "elementType": "all",
           "stylers": [
             { "visibility": "off" }
           ]
         },
         {
           "featureType": "poi",
-          "elementType": "geometry",
+          "elementType": "all",
           "stylers": [
             { "visibility": "off" }
           ]
         },
         {
-          "featureType": "poi",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            { "visibility": "off" }
-          ]
-        },
-        {
-          "featureType": "poi",
-          "elementType": "labels.text.stroke",
+          "featureType": "transit",
+          "elementType": "all",
           "stylers": [
             { "visibility": "off" }
           ]
@@ -78,7 +60,7 @@ export class MapaEntregasComponent implements OnInit {
           "featureType": "road",
           "elementType": "geometry",
           "stylers": [
-            { "visibility": "simplified" }
+            { "visibility": "on" }
           ]
         },
         {
@@ -89,21 +71,14 @@ export class MapaEntregasComponent implements OnInit {
           ]
         },
         {
-          "featureType": "transit",
-          "elementType": "geometry",
-          "stylers": [
-            { "visibility": "off" }
-          ]
-        },
-        {
-          "featureType": "transit",
+          "featureType": "road",
           "elementType": "labels.text.fill",
           "stylers": [
-            { "visibility": "off" }
+            { "color": "#000000" } // Cor dos nomes das ruas
           ]
         },
         {
-          "featureType": "transit",
+          "featureType": "road",
           "elementType": "labels.text.stroke",
           "stylers": [
             { "visibility": "off" }
@@ -111,66 +86,55 @@ export class MapaEntregasComponent implements OnInit {
         },
         {
           "featureType": "water",
-          "elementType": "geometry",
+          "elementType": "all",
           "stylers": [
-            { "visibility": "simplified" },
-            { "color": "#e9e9e9" }
+            { "visibility": "off" }
           ]
         },
         {
           "featureType": "landscape",
-          "elementType": "geometry",
-          "stylers": [
-            { "visibility": "simplified" },
-            { "color": "#f5f5f5" }
-          ]
-        },
-        {
-          "featureType": "road",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            { "color": "#000000" }
-          ]
-        },
-        {
-          "featureType": "road",
-          "elementType": "labels.text.stroke",
+          "elementType": "all",
           "stylers": [
             { "visibility": "off" }
           ]
         }
       ];
-
+  
       this.map = new google.maps.Map(document.getElementById("map") as HTMLElement, {
         center: { lat: -23.55052, lng: -46.633308 },
         zoom: 12,
-        styles: mapStyles
+        styles: mapStyles,
+        disableDefaultUI: true,
       });
-
+  
       this.directionsService = new google.maps.DirectionsService();
       this.directionsRenderer = new google.maps.DirectionsRenderer({
-        suppressPolylines: true, // Isso impede o DirectionsRenderer de desenhar a Polyline
+        suppressPolylines: true,
+        suppressMarkers: true,
       });
       this.directionsRenderer.setMap(this.map);
       this.geocoder = new google.maps.Geocoder();
-
-      // Ícone do motoboy
+  
       this.motoboyMarker = new google.maps.Marker({
         map: this.map,
         icon: {
-          url: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
-          scaledSize: new google.maps.Size(50, 50)
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: 'black',
+          fillOpacity: 1,
+          strokeColor: 'orange',
+          strokeWeight: 2,
+          scale: 6, // Tamanho do ponto
         }
       });
-
-      this.onCalculateRoute(); // Calcular rota ao carregar o mapa
-      this.startRealTimeLocationUpdates(); // Começar a atualização em tempo real
+  
+      this.onCalculateRoute();
     } else {
       console.error('Google Maps API não carregada ou não encontrada');
     }
   }
 
   onCalculateRoute(): void {
+    this.mapVisible = true;
     this.geocodeAddress(this.originAddress, (origin) => {
       this.geocodeAddress(this.destinationAddress, (destination) => {
         this.calculateRoute(origin, destination);
@@ -198,13 +162,11 @@ export class MapaEntregasComponent implements OnInit {
 
     this.directionsService.route(request, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK) {
-        // Remover a rota anterior
         if (this.routePolyline) {
           this.routePolyline.setMap(null);
           this.routePolyline = null;
         }
 
-        // Desenhar a nova rota
         this.routePolyline = new google.maps.Polyline({
           path: result!.routes[0].overview_path,
           strokeColor: "#00acee",
@@ -214,6 +176,9 @@ export class MapaEntregasComponent implements OnInit {
         });
 
         this.calculateEstimatedArrivalTime(result!.routes[0].legs[0]);
+
+        // Iniciar a simulação do movimento
+        this.simulateMotoboyMovement(result!.routes[0].overview_path);
       } else {
         console.error('Erro ao calcular a rota:', status);
       }
@@ -225,29 +190,51 @@ export class MapaEntregasComponent implements OnInit {
     this.estimatedArrivalTime.setSeconds(this.estimatedArrivalTime.getSeconds() + leg.duration!.value);
   }
 
-  startRealTimeLocationUpdates(): void {
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        position => {
-          const newLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-          this.motoboyMarker.setPosition(newLocation);
-          this.map.panTo(newLocation);
+  simulateMotoboyMovement(path: google.maps.LatLng[]): void {
+    let step = 0;
+    const speed = 50; // Velocidade em km/h
+    const intervalTime = 1000; // Tempo em milissegundos para cada atualização (1 segundo)
+    const stepDistance = (speed * 1000) / 3600 * (intervalTime / 1000); // Distância percorrida em cada intervalo
 
-          this.calculateUpdatedETA(newLocation);
-        },
-        error => {
-          console.error('Erro ao obter a localização:', error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
+    const move = () => {
+        if (step < path.length - 1) {
+            const currentPosition = this.motoboyMarker.getPosition() || path[step];
+            const nextPosition = path[step + 1];
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(currentPosition, nextPosition);
+
+            if (distance < stepDistance) {
+                step++;
+                this.motoboyMarker.setPosition(nextPosition);
+
+                // Remover o ponto percorrido do polyline
+                const newPath = path.slice(step);
+                this.routePolyline!.setPath(newPath);
+            } else {
+                const heading = google.maps.geometry.spherical.computeHeading(currentPosition, nextPosition);
+                const newPosition = google.maps.geometry.spherical.computeOffset(currentPosition, stepDistance, heading);
+                this.motoboyMarker.setPosition(newPosition);
+
+                // Atualizar o polyline com a nova posição
+                const updatedPath = this.routePolyline!.getPath().getArray();
+                updatedPath[0] = newPosition; // Atualizar a posição inicial do caminho
+                this.routePolyline!.setPath(updatedPath);
+            }
+
+            this.map.panTo(this.motoboyMarker.getPosition() as google.maps.LatLng);
+
+            // Atualizar o tempo estimado de chegada
+            this.calculateUpdatedETA(this.motoboyMarker.getPosition() as google.maps.LatLng);
+
+            setTimeout(move, intervalTime);
+        } else {
+            console.log('Chegada ao destino.');
+            this.motoboyMarker.setPosition(path[path.length - 1]); // Garante que o marcador finalize na posição final
         }
-      );
-    } else {
-      console.error('Geolocalização não é suportada pelo seu navegador.');
-    }
-  }
+    };
+
+    move();
+}
+
 
   calculateUpdatedETA(currentPosition: google.maps.LatLng): void {
     const remainingDistance = google.maps.geometry.spherical.computeDistanceBetween(
@@ -255,7 +242,7 @@ export class MapaEntregasComponent implements OnInit {
       this.routePolyline!.getPath().getAt(this.routePolyline!.getPath().getLength() - 1)
     );
 
-    const speed = 50; // Suponha uma velocidade constante de 50 km/h
+    const speed = 50; // Velocidade constante de 50 km/h
     const timeToDestination = (remainingDistance / 1000) / speed * 3600 * 1000;
     this.estimatedArrivalTime.setTime(new Date().getTime() + timeToDestination);
   }
