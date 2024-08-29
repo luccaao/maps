@@ -11,15 +11,16 @@ import { FormsModule } from '@angular/forms';
 })
 export class MapaEntregasComponent implements OnInit {
 
-  originAddress: string = 'Rua Maranhão, 575, Praia da Costa';  
-  destinationAddress: string = 'Jardim da Penha, Rua José Neves Cypreste'; 
+  originAddress: string = '';  
+  destinationAddress: string = ''; 
 
   private map!: google.maps.Map;
   private directionsService!: google.maps.DirectionsService;
   private directionsRenderer!: google.maps.DirectionsRenderer;
   private geocoder!: google.maps.Geocoder;
   private motoboyMarker!: google.maps.Marker;
-  private routePolyline!: google.maps.Polyline;
+  private routePolyline: google.maps.Polyline | null = null;
+
   private estimatedArrivalTime!: Date;
 
   constructor() { }
@@ -38,7 +39,106 @@ export class MapaEntregasComponent implements OnInit {
             { "visibility": "off" }
           ]
         },
-        // Outros estilos que você configurou
+        {
+          "featureType": "administrative",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "administrative",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "geometry",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "geometry",
+          "stylers": [
+            { "visibility": "simplified" }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "labels.icon",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "transit",
+          "elementType": "geometry",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "transit",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "transit",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        },
+        {
+          "featureType": "water",
+          "elementType": "geometry",
+          "stylers": [
+            { "visibility": "simplified" },
+            { "color": "#e9e9e9" }
+          ]
+        },
+        {
+          "featureType": "landscape",
+          "elementType": "geometry",
+          "stylers": [
+            { "visibility": "simplified" },
+            { "color": "#f5f5f5" }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            { "color": "#000000" }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            { "visibility": "off" }
+          ]
+        }
       ];
 
       this.map = new google.maps.Map(document.getElementById("map") as HTMLElement, {
@@ -48,7 +148,9 @@ export class MapaEntregasComponent implements OnInit {
       });
 
       this.directionsService = new google.maps.DirectionsService();
-      this.directionsRenderer = new google.maps.DirectionsRenderer();
+      this.directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressPolylines: true, // Isso impede o DirectionsRenderer de desenhar a Polyline
+      });
       this.directionsRenderer.setMap(this.map);
       this.geocoder = new google.maps.Geocoder();
 
@@ -96,13 +198,18 @@ export class MapaEntregasComponent implements OnInit {
 
     this.directionsService.route(request, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK) {
-        this.directionsRenderer.setDirections(result);
+        // Remover a rota anterior
+        if (this.routePolyline) {
+          this.routePolyline.setMap(null);
+          this.routePolyline = null;
+        }
 
+        // Desenhar a nova rota
         this.routePolyline = new google.maps.Polyline({
           path: result!.routes[0].overview_path,
-          strokeColor: "#FF0000",
+          strokeColor: "#00acee",
           strokeOpacity: 1.0,
-          strokeWeight: 3,
+          strokeWeight: 4,
           map: this.map
         });
 
@@ -145,7 +252,7 @@ export class MapaEntregasComponent implements OnInit {
   calculateUpdatedETA(currentPosition: google.maps.LatLng): void {
     const remainingDistance = google.maps.geometry.spherical.computeDistanceBetween(
       currentPosition,
-      this.routePolyline.getPath().getAt(this.routePolyline.getPath().getLength() - 1)
+      this.routePolyline!.getPath().getAt(this.routePolyline!.getPath().getLength() - 1)
     );
 
     const speed = 50; // Suponha uma velocidade constante de 50 km/h

@@ -1,14 +1,20 @@
-<div>
-    <label for="origin">Endereço de Origem:</label>
-    <input id="origin" [(ngModel)]="originAddress" placeholder="Rua Maranhão, 575, Praia da Costa">
+<div class="container">
+    <div class="form-group">
+      <label for="origin">Endereço de Origem:</label>
+      <input id="origin" [(ngModel)]="originAddress" class="form-control" placeholder="Rua Maranhão, 575, Praia da Costa">
+    </div>
+    
+    <div class="form-group">
+      <label for="destination">Endereço de Destino:</label>
+      <input id="destination" [(ngModel)]="destinationAddress" class="form-control" placeholder="Jardim da Penha, Rua José Neves Cypreste">
+    </div>
+    
+    <button (click)="onCalculateRoute()" class="btn btn-primary">Calcular Rota</button>
+    
+    <div id="map" class="map-container"></div>
+  
+    <div class="eta">
+      <h3>Tempo estimado de chegada: {{ getEstimatedArrivalTime() }}</h3>
+    </div>
   </div>
-  
-  <div>
-    <label for="destination">Endereço de Destino:</label>
-    <input id="destination" [(ngModel)]="destinationAddress" placeholder="Jardim da Penha, Rua José Neves Cypreste">
-  </div>
-  
-  <button (click)="onCalculateRoute()">Calcular Rota</button>
-  
-  <div id="map" style="height: 500px;"></div>
   
