@@ -1,0 +1,14 @@
+<div>
+    <label for="origin">Endereço de Origem:</label>
+    <input id="origin" [(ngModel)]="originAddress" placeholder="Rua Maranhão, 575, Praia da Costa">
+  </div>
+  
+  <div>
+    <label for="destination">Endereço de Destino:</label>
+    <input id="destination" [(ngModel)]="destinationAddress" placeholder="Jardim da Penha, Rua José Neves Cypreste">
+  </div>
+  
+  <button (click)="onCalculateRoute()">Calcular Rota</button>
+  
+  <div id="map" style="height: 500px;"></div>
+  
